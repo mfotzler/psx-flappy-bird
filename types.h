@@ -5,10 +5,10 @@
 
 typedef struct {
     TILE *tile;
-    int x;
-    int y;
-    short velocityX;
-    short velocityY;
+    float x;
+    float y;
+    float velocityX;
+    float velocityY;
     bool isGameOver;
     PADTYPE *pad;
 } GameState;

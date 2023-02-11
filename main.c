@@ -97,7 +97,7 @@ void afterGameLogic() {
 }
 
 void initializeGameState(GameState *gameState) {
-    gameState->x = 150;
+    gameState->x = 50;
     gameState->y = 100;
     gameState->velocityX = 0;
     gameState->velocityY = 0;
@@ -114,7 +114,7 @@ int main() {
         beforeGameLogic();
 
         drawWalls();
-        drawSquare(gameState.tile, gameState.x, gameState.y, 255, 255, 0);
+        drawSquare(gameState.tile, (int)gameState.x, (int)gameState.y, 255, 255, 0);
 
         processGameLogic(&gameState);
 
