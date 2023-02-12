@@ -76,6 +76,7 @@ uint16_t generateNextPipeSpawnFrame() {
 
 void spawnPipe(GameState *gameState) {
     gameState->pipes[gameState->nextPipeIndex].isActive = true;
+    gameState->pipes[gameState->nextPipeIndex].hasAwardedPoints = false;
     gameState->pipes[gameState->nextPipeIndex].x = 320.0;
     uint16_t gapTopY = rand() % (200 - GAP_SIZE);
     gameState->pipes[gameState->nextPipeIndex].gapTopY = gapTopY;
@@ -112,9 +113,20 @@ void updatePipes(GameState *gameState) {
     scrollPipes(gameState);
 }
 
+void checkForScore(GameState *gameState) {
+    for (int i = 0; i < MAX_PIPES; i++) {
+        if(gameState->pipes[i].isActive && gameState->pipes[i].x < gameState->x
+                && !gameState->pipes[i].hasAwardedPoints) {
+            gameState->pipes[i].hasAwardedPoints = true;
+            gameState->score++;
+        }
+    }
+}
+
 void processGameLogic(GameState *gameState) {
     if (!gameState->isGameOver) {
         updatePipes(gameState);
+        checkForScore(gameState);
         applyGravity(gameState);
         applyControllerActions(gameState);
         updatePlayerPosition(gameState);

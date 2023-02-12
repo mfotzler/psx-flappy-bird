@@ -9,6 +9,7 @@ typedef struct {
     short gapTopY;
     short gapBottomY;
     bool isActive;
+    bool hasAwardedPoints;
 } PipePair;
 
 typedef struct {

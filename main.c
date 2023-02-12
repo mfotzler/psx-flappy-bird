@@ -64,7 +64,7 @@ void init(GameState *gameState) {
     FntLoad(960, 0);
     // Create the text stream
     gameState->gameOverTextboxId = FntOpen(30, 48, 275, 100, 0, 100);
-    gameState->scoreTextboxId = FntOpen(30, 10, 275, 100, 0, 100);
+    gameState->scoreTextboxId = FntOpen(30, 225, 275, 100, 0, 100);
 }
 
 void drawRectangle(TILE *tile, int x, int y, int w, int h, int r, int g, int b, int orderLayer) {
@@ -123,6 +123,7 @@ void initializeGameState(GameState *gameState) {
         gameState->pipes[i].gapTopY = 0;
         gameState->pipes[i].gapBottomY = 0;
         gameState->pipes[i].isActive = false;
+        gameState->pipes[i].hasAwardedPoints = false;
     }
 }
 
