@@ -35,8 +35,26 @@ void applyControllerActions(GameState *gameState) {
     }
 }
 
+bool isPlayerCollidingWithPipes(GameState *gameState) {
+    for (int i = 0; i < MAX_PIPES; i++) {
+        if(gameState->pipes[i].isActive == false)
+            continue;
+
+        if(isColliding(gameState->x, gameState->y, PLAYER_SIZE, PLAYER_SIZE, gameState->pipes[i].x, 0, 20, gameState->pipes[i].gapTopY))
+            return true;
+
+        if(isColliding(gameState->x, gameState->y, PLAYER_SIZE, PLAYER_SIZE, gameState->pipes[i].x, gameState->pipes[i].gapBottomY, 20, 240 - gameState->pipes[i].gapBottomY))
+            return true;
+    }
+
+    return false;
+}
+
 bool isPlayerDead(GameState *gameState) {
     if (isPlayerCollidingWithWall(gameState->x, gameState->y))
+        return true;
+
+    if(isPlayerCollidingWithPipes(gameState))
         return true;
 
     return false;
