@@ -22,6 +22,9 @@ char pribuff[2][32768]; // Primitive buffer
 char *nextpri;          // Next primitive pointer
 u_char padbuff[2][34];  // Controller input buffers
 
+extern const uint32_t birdTexture[];
+TIM_IMAGE birdTim;
+
 void display() {
     DrawSync(0);                // Wait for any graphics processing to finish
 
@@ -60,6 +63,13 @@ void init(GameState *gameState) {
     StartPAD();
     ChangeClearPAD(1);
 
+    GetTimInfo( birdTexture, &birdTim ); /* Get TIM parameters */
+
+    LoadImage(birdTim.prect, birdTim.paddr );		/* Upload texture to VRAM */
+    if(birdTim.mode & 0x8 ) {
+        LoadImage(birdTim.crect, birdTim.caddr );	/* Upload CLUT if present */
+    }
+
     // Load the internal font texture
     FntLoad(960, 0);
     // Create the text stream
@@ -81,6 +91,25 @@ void drawRectangle(TILE *tile, int x, int y, int w, int h, int r, int g, int b, 
 
 void drawSquare(TILE *tile, int x, int y, int r, int g, int b, int orderLayer) {
     drawRectangle(tile, x, y, PLAYER_SIZE, PLAYER_SIZE, r, g, b, 7);
+}
+
+void drawPlayer(GameState *gameState) {
+    SPRT *player = (SPRT *) nextpri;      // Cast next primitive
+    DR_TPAGE *tpri;
+    setSprt(player);              // Initialize the primitive (very important)
+    setXY0(player, (int)gameState->x, (int)gameState->y);       // Set primitive (x,y) position
+    setWH(player, PLAYER_SIZE, PLAYER_SIZE);        // Set primitive size
+    setRGB0(player, 128, 128, 128);
+    addPrim(ot[db]+5, player);      // Add primitive to the ordering table
+    nextpri += sizeof(SPRT);    // Advance the next primitive pointer
+
+    /* Sort a TPage primitive so the sprites will draw pixels from */
+    /* the correct texture page in VRAM */
+    tpri = (DR_TPAGE*)nextpri;
+    setDrawTPage( tpri, 0, 0,
+                  getTPage(birdTim.mode & 0x3, 0, birdTim.prect->x, birdTim.prect->y ));
+    addPrim( ot[db]+(OTLEN-1), tpri );
+    nextpri += sizeof(DR_TPAGE);
 }
 
 void drawWalls() {
@@ -136,7 +165,7 @@ int main() {
         beforeGameLogic();
 
         drawWalls();
-        drawSquare(gameState.tile, (int)gameState.x, (int)gameState.y, 255, 255, 0, 5);
+        drawPlayer(&gameState);
         drawPipes(&gameState);
 
         processGameLogic(&gameState);
