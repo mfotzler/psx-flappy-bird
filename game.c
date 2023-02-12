@@ -70,7 +70,8 @@ void updatePlayerPosition(GameState *gameState) {
 }
 
 uint16_t generateNextPipeSpawnFrame() {
-    return PIPE_FREQUENCY;
+    int randomOffsetRange = PIPE_FREQUENCY / 4;
+    return PIPE_FREQUENCY + (rand() % randomOffsetRange) - (randomOffsetRange / 2);
 }
 
 void spawnPipe(GameState *gameState) {
