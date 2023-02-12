@@ -38,7 +38,7 @@ void display() {
     nextpri = pribuff[db];      // Reset next primitive pointer
 }
 
-void init() {
+void init(GameState *gameState) {
     // Reset graphics
     ResetGraph(0);
 
@@ -63,29 +63,30 @@ void init() {
     // Load the internal font texture
     FntLoad(960, 0);
     // Create the text stream
-    FntOpen(30, 48, 275, 100, 0, 100);
+    gameState->gameOverTextboxId = FntOpen(30, 48, 275, 100, 0, 100);
+    gameState->scoreTextboxId = FntOpen(30, 10, 275, 100, 0, 100);
 }
 
-void drawRectangle(TILE *tile, int x, int y, int w, int h, int r, int g, int b) {
+void drawRectangle(TILE *tile, int x, int y, int w, int h, int r, int g, int b, int orderLayer) {
     tile = (TILE *) nextpri;      // Cast next primitive
 
     setTile(tile);              // Initialize the primitive (very important)
     setXY0(tile, x, y);       // Set primitive (x,y) position
     setWH(tile, w, h);        // Set primitive size
     setRGB0(tile, r, g, b); // Set color yellow
-    addPrim(ot[db], tile);      // Add primitive to the ordering table
+    addPrim(ot[db]+orderLayer, tile);      // Add primitive to the ordering table
 
     nextpri += sizeof(TILE);    // Advance the next primitive pointer
 }
 
-void drawSquare(TILE *tile, int x, int y, int r, int g, int b) {
-    drawRectangle(tile, x, y, PLAYER_SIZE, PLAYER_SIZE, r, g, b);
+void drawSquare(TILE *tile, int x, int y, int r, int g, int b, int orderLayer) {
+    drawRectangle(tile, x, y, PLAYER_SIZE, PLAYER_SIZE, r, g, b, 7);
 }
 
 void drawWalls() {
     TILE *walls[2];
-    drawRectangle(walls[0], 0, 0, 320, 20, 0, 0, 150);
-    drawRectangle(walls[1], 0, 220, 320, 20, 0, 0, 150);
+    drawRectangle(walls[0], 0, 0, 320, 20, 0, 0, 150, 7);
+    drawRectangle(walls[1], 0, 220, 320, 20, 0, 0, 150, 7);
 }
 
 void drawPipes(GameState *gameState) {
@@ -93,8 +94,8 @@ void drawPipes(GameState *gameState) {
     for(int i = 0; i < MAX_PIPES; i++) {
         if(gameState->pipes[i].isActive == false)
             continue;
-        drawRectangle(pipe, gameState->pipes[i].x, 0, 20, gameState->pipes[i].gapTopY, 0, 150, 0);
-        drawRectangle(pipe, gameState->pipes[i].x, gameState->pipes[i].gapBottomY, 20, 240 - gameState->pipes[i].gapBottomY, 0, 150, 0);
+        drawRectangle(pipe, gameState->pipes[i].x, 0, 20, gameState->pipes[i].gapTopY, 0, 150, 0, 6);
+        drawRectangle(pipe, gameState->pipes[i].x, gameState->pipes[i].gapBottomY, 20, 240 - gameState->pipes[i].gapBottomY, 0, 150, 0, 6);
     }
 }
 
@@ -107,6 +108,7 @@ void afterGameLogic() {
 }
 
 void initializeGameState(GameState *gameState) {
+    gameState->score = 0;
     gameState->x = 50;
     gameState->y = 100;
     gameState->velocityX = 0;
@@ -128,12 +130,12 @@ int main() {
     GameState gameState;
     initializeGameState(&gameState);
 
-    init();
+    init(&gameState);
     while (1) {
         beforeGameLogic();
 
         drawWalls();
-        drawSquare(gameState.tile, (int)gameState.x, (int)gameState.y, 255, 255, 0);
+        drawSquare(gameState.tile, (int)gameState.x, (int)gameState.y, 255, 255, 0, 5);
         drawPipes(&gameState);
 
         processGameLogic(&gameState);

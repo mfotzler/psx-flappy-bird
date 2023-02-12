@@ -123,8 +123,11 @@ void processGameLogic(GameState *gameState) {
     if(isPlayerDead(gameState))
         gameState->isGameOver = true;
 
+    FntPrint(gameState->scoreTextboxId, "SCORE: %d", gameState->score);
+    FntFlush(gameState->scoreTextboxId);
+
     if (gameState->isGameOver) {
-        FntPrint(-1, "GAME OVER. PRESS START TO RESTART");
-        FntFlush(-1);
+        FntPrint(gameState->gameOverTextboxId, "GAME OVER. PRESS START TO RESTART");
+        FntFlush(gameState->gameOverTextboxId);
     }
 }

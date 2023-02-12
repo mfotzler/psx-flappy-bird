@@ -13,6 +13,9 @@ typedef struct {
 
 typedef struct {
     TILE *tile;
+    int scoreTextboxId;
+    int gameOverTextboxId;
+    uint16_t score;
     float x;
     float y;
     float velocityX;
