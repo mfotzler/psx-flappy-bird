@@ -4,7 +4,9 @@ Flappy bird style game for PS1
 ![Screenshot of game over state](screenshot.png)
 
 ## Building
-Assuming you have the PSn00bSDK installed and working:
+Requirements:
+- PSn00bSDK
+- LICENSA.DAT placed license file in the `/build` directory (or comment out the license line in `iso.xml`)
 
 `cmake --preset default .` will setup the build directory
 `cmake --build ./build` will build the game
