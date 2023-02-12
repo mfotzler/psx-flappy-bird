@@ -164,7 +164,9 @@ void drawPlayer(GameState *gameState) {
 
 void drawWalls() {
 //    TILE *wall;
-    drawRectangleWithTexture(0, 220, 320, 20, 7, &groundTextureInfo);
+    for(int i = 0; i < 5; i++) {
+        drawRectangleWithTexture(i * 64, 220, 64, 20, 6, &groundTextureInfo);
+    }
 //    drawRectangle(wall, 0, 220, 320, 20, 0, 0, 150, 7);
 }
 

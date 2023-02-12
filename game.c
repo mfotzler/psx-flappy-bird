@@ -16,8 +16,7 @@ bool isColliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 }
 
 bool isPlayerCollidingWithWall(int x, int y) {
-    return isColliding(x, y, PLAYER_SIZE, PLAYER_SIZE, 0, 0, 320, 20) ||
-           isColliding(x, y, PLAYER_SIZE, PLAYER_SIZE, 0, 220, 320, 20);
+    return isColliding(x, y, PLAYER_SIZE, PLAYER_SIZE, 0, 220, 320, 20);
 }
 
 bool isController1Connected(GameState *gameState) {
