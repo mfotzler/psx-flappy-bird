@@ -1,6 +1,8 @@
 # psx-flappy-bird
 Flappy bird style game for PS1
 
+![Screenshot of game over state](screenshot.png)
+
 ## Building
 Assuming you have the PSn00bSDK installed and working:
 
