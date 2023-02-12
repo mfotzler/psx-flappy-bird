@@ -37,6 +37,8 @@ extern const uint32_t groundTexture[];
 TextureInfo groundTextureInfo;
 extern const uint32_t pipeTexture[];
 TextureInfo pipeTextureInfo;
+extern const uint32_t pipeCapTexture[];
+TextureInfo pipeCapTextureInfo;
 
 void display() {
     DrawSync(0);                // Wait for any graphics processing to finish
@@ -77,6 +79,7 @@ void loadTextures() {
     loadTexture(cloudTexture, &cloudTextureInfo);
     loadTexture(groundTexture, &groundTextureInfo);
     loadTexture(pipeTexture, &pipeTextureInfo);
+    loadTexture(pipeCapTexture, &pipeCapTextureInfo);
 }
 
 void init(GameState *gameState) {
@@ -170,12 +173,35 @@ void drawWalls() {
 //    drawRectangle(wall, 0, 220, 320, 20, 0, 0, 150, 7);
 }
 
+void drawPipe(int x, int y, int h) {
+    int remainingHeight = h;
+    int pipeTextureHeight = 64;
+    int currentDrawY = y;
+
+    while(remainingHeight > 0) {
+        int pipeHeight = remainingHeight > pipeTextureHeight ? pipeTextureHeight : remainingHeight;
+        drawRectangleWithTexture(x, currentDrawY, 20, pipeHeight, 4, &pipeTextureInfo);
+        remainingHeight -= pipeHeight;
+        currentDrawY += pipeHeight;
+    }
+}
+
+void drawTopPipe(int x, int y, int h) {
+    drawRectangleWithTexture(x, y + h, 20, 10, 4, &pipeCapTextureInfo);
+    drawPipe(x, y, h);
+}
+
+void drawBottomPipe(int x, int y, int h) {
+    drawRectangleWithTexture(x, y, 20, 10, 4, &pipeCapTextureInfo);
+    drawPipe(x, y, h);
+}
+
 void drawPipes(GameState *gameState) {
     for(int i = 0; i < MAX_PIPES; i++) {
         if(gameState->pipes[i].isActive == false)
             continue;
-        drawRectangleWithTexture((int)gameState->pipes[i].x, 0, 20, gameState->pipes[i].gapTopY, 6, &pipeTextureInfo);
-        drawRectangleWithTexture((int)gameState->pipes[i].x, gameState->pipes[i].gapBottomY, 20, 240 - gameState->pipes[i].gapBottomY, 6, &pipeTextureInfo);
+        drawTopPipe((int)gameState->pipes[i].x, 0, gameState->pipes[i].gapTopY);
+        drawBottomPipe((int)gameState->pipes[i].x, gameState->pipes[i].gapBottomY, 240 - gameState->pipes[i].gapBottomY);
     }
 }
 

@@ -16,6 +16,7 @@ psn00bsdk_target_incbin(template PRIVATE birdTexture assets/bird.tim)
 psn00bsdk_target_incbin(template PRIVATE cloudTexture assets/cloud.tim)
 psn00bsdk_target_incbin(template PRIVATE groundTexture assets/ground.tim)
 psn00bsdk_target_incbin(template PRIVATE pipeTexture assets/pipe.tim)
+psn00bsdk_target_incbin(template PRIVATE pipeCapTexture assets/pipe-cap.tim)
 
 psn00bsdk_add_cd_image(
 	iso      # Target name
