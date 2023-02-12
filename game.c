@@ -2,10 +2,14 @@
 #include <psxgpu.h>
 #include <psxpad.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "types.h"
 
 #define FLAP_POWER 3
 #define GRAVITY_POWER 0.5
+#define PIPE_FREQUENCY 100
+#define GAP_SIZE 80
+#define SCROLL_SPEED 3
 
 bool isColliding(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2) {
     return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
@@ -47,8 +51,51 @@ void updatePlayerPosition(GameState *gameState) {
     gameState->y += gameState->velocityY;
 }
 
+uint16_t generateNextPipeSpawnFrame() {
+    return PIPE_FREQUENCY;
+}
+
+void spawnPipe(GameState *gameState) {
+    gameState->pipes[gameState->nextPipeIndex].isActive = true;
+    gameState->pipes[gameState->nextPipeIndex].x = 320.0;
+    uint16_t gapTopY = rand() % (200 - GAP_SIZE);
+    gameState->pipes[gameState->nextPipeIndex].gapTopY = gapTopY;
+    gameState->pipes[gameState->nextPipeIndex].gapBottomY = gapTopY + GAP_SIZE;
+
+    gameState->nextPipeIndex = (gameState->nextPipeIndex + 1) % MAX_PIPES;
+}
+
+void processPipeDespawn(GameState *gameState) {
+    for (int i = 0; i < MAX_PIPES; i++) {
+        if(gameState->pipes[i].x < -20)
+            gameState->pipes[i].isActive = false;
+    }
+}
+
+void checkOnPipeSpawn(GameState *gameState) {
+    if(gameState->framesUntilPipeSpawn == 0) {
+        gameState->framesUntilPipeSpawn = generateNextPipeSpawnFrame();
+        spawnPipe(gameState);
+    } else {
+        gameState->framesUntilPipeSpawn--;
+    }
+}
+
+void scrollPipes(GameState *gameState) {
+    for (int i = 0; i < MAX_PIPES; i++) {
+        gameState->pipes[i].x -= SCROLL_SPEED;
+    }
+}
+
+void updatePipes(GameState *gameState) {
+    checkOnPipeSpawn(gameState);
+    processPipeDespawn(gameState);
+    scrollPipes(gameState);
+}
+
 void processGameLogic(GameState *gameState) {
     if (!gameState->isGameOver) {
+        updatePipes(gameState);
         applyGravity(gameState);
         applyControllerActions(gameState);
         updatePlayerPosition(gameState);

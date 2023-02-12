@@ -88,6 +88,16 @@ void drawWalls() {
     drawRectangle(walls[1], 0, 220, 320, 20, 0, 0, 150);
 }
 
+void drawPipes(GameState *gameState) {
+    TILE *pipe;
+    for(int i = 0; i < MAX_PIPES; i++) {
+        if(gameState->pipes[i].isActive == false)
+            continue;
+        drawRectangle(pipe, gameState->pipes[i].x, 0, 20, gameState->pipes[i].gapTopY, 0, 150, 0);
+        drawRectangle(pipe, gameState->pipes[i].x, gameState->pipes[i].gapBottomY, 20, 240 - gameState->pipes[i].gapBottomY, 0, 150, 0);
+    }
+}
+
 void beforeGameLogic() {
     ClearOTagR(ot[db], OTLEN);  // Clear ordering table
 }
@@ -102,7 +112,16 @@ void initializeGameState(GameState *gameState) {
     gameState->velocityX = 0;
     gameState->velocityY = 0;
     gameState->isGameOver = false;
+    gameState->nextPipeIndex = 0;
+    gameState->framesUntilPipeSpawn = generateNextPipeSpawnFrame();
     gameState->pad = (PADTYPE *) padbuff[0];
+
+    for(int i = 0; i < MAX_PIPES; i++) {
+        gameState->pipes[i].x = -20;
+        gameState->pipes[i].gapTopY = 0;
+        gameState->pipes[i].gapBottomY = 0;
+        gameState->pipes[i].isActive = false;
+    }
 }
 
 int main() {
@@ -115,6 +134,7 @@ int main() {
 
         drawWalls();
         drawSquare(gameState.tile, (int)gameState.x, (int)gameState.y, 255, 255, 0);
+        drawPipes(&gameState);
 
         processGameLogic(&gameState);
 
