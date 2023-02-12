@@ -67,6 +67,9 @@ void applyGravity(GameState *gameState) {
 void updatePlayerPosition(GameState *gameState) {
     gameState->x += gameState->velocityX;
     gameState->y += gameState->velocityY;
+
+    if(gameState->y < 0)
+        gameState->y = 0;
 }
 
 uint16_t generateNextPipeSpawnFrame() {

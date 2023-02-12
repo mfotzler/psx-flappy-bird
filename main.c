@@ -22,8 +22,21 @@ char pribuff[2][32768]; // Primitive buffer
 char *nextpri;          // Next primitive pointer
 u_char padbuff[2][34];  // Controller input buffers
 
+typedef struct {
+    const uint32_t *texture;
+    uint32_t	mode;
+    RECT		crect;
+    RECT		prect;
+} TextureInfo;
+
 extern const uint32_t birdTexture[];
-TIM_IMAGE birdTim;
+TextureInfo birdTextureInfo;
+extern const uint32_t cloudTexture[];
+TextureInfo cloudTextureInfo;
+extern const uint32_t groundTexture[];
+TextureInfo groundTextureInfo;
+extern const uint32_t pipeTexture[];
+TextureInfo pipeTextureInfo;
 
 void display() {
     DrawSync(0);                // Wait for any graphics processing to finish
@@ -41,6 +54,31 @@ void display() {
     nextpri = pribuff[db];      // Reset next primitive pointer
 }
 
+u_short getTPageForTim(TextureInfo *tim) {
+    return getTPage(tim->mode & 0x3, 0, tim->prect.x, tim->prect.y);
+}
+
+void loadTexture(const uint32_t *texture, TextureInfo *textureInfo) {
+    TIM_IMAGE *tim;
+    GetTimInfo( texture, tim ); /* Get TIM parameters */
+    LoadImage(tim->prect, tim->paddr );		/* Upload texture to VRAM */
+    DrawSync(0);
+    if(tim->mode & 0x8 ) {
+        LoadImage(tim->crect, tim->caddr );	/* Upload CLUT if present */
+        DrawSync(0);
+    }
+    textureInfo->prect = *tim->prect;
+    textureInfo->crect = *tim->crect;
+    textureInfo->mode = tim->mode;
+}
+
+void loadTextures() {
+    loadTexture(birdTexture, &birdTextureInfo);
+    loadTexture(cloudTexture, &cloudTextureInfo);
+    loadTexture(groundTexture, &groundTextureInfo);
+    loadTexture(pipeTexture, &pipeTextureInfo);
+}
+
 void init(GameState *gameState) {
     // Reset graphics
     ResetGraph(0);
@@ -53,9 +91,9 @@ void init(GameState *gameState) {
     SetDefDrawEnv(&draw[1], 0, 0, 320, 240);
 
     draw[0].isbg = 1;               // Enable clear
-    setRGB0(&draw[0], 0, 0, 0);  // Set clear color (dark purple)
+    setRGB0(&draw[0], 118, 179, 222);
     draw[1].isbg = 1;
-    setRGB0(&draw[1], 0, 0, 0);
+    setRGB0(&draw[1], 118, 179, 222);
 
     nextpri = pribuff[0];           // Set initial primitive pointer address
 
@@ -63,12 +101,7 @@ void init(GameState *gameState) {
     StartPAD();
     ChangeClearPAD(1);
 
-    GetTimInfo( birdTexture, &birdTim ); /* Get TIM parameters */
-
-    LoadImage(birdTim.prect, birdTim.paddr );		/* Upload texture to VRAM */
-    if(birdTim.mode & 0x8 ) {
-        LoadImage(birdTim.crect, birdTim.caddr );	/* Upload CLUT if present */
-    }
+    loadTextures();
 
     // Load the internal font texture
     FntLoad(960, 0);
@@ -89,42 +122,58 @@ void drawRectangle(TILE *tile, int x, int y, int w, int h, int r, int g, int b, 
     nextpri += sizeof(TILE);    // Advance the next primitive pointer
 }
 
-void drawSquare(TILE *tile, int x, int y, int r, int g, int b, int orderLayer) {
-    drawRectangle(tile, x, y, PLAYER_SIZE, PLAYER_SIZE, r, g, b, 7);
+void drawRectangleWithTexture(int x, int y, int w, int h, int orderLayer, TextureInfo *textureInfo) {
+    SPRT *sprite = (SPRT*) nextpri;      // Cast next primitive
+    DR_TPAGE *tpage;
+
+    setSprt(sprite);              // Initialize the primitive (very important)
+    setXY0(sprite, x, y);       // Set primitive (x,y) position
+    setWH(sprite, w, h);        // Set primitive size
+    setUV0(sprite, 0, 0); // Set texture coordinates
+    setClut(sprite, 0, 0);
+    setRGB0(sprite, 128, 128, 128); // set neutral color
+    addPrim(ot[db]+orderLayer, sprite);      // Add primitive to the ordering table
+    nextpri += sizeof(SPRT);    // Advance the next primitive pointer
+
+    tpage = (DR_TPAGE *) nextpri;      // Cast next primitive
+    setDrawTPage(tpage, 0, 0, getTPageForTim(textureInfo)); // Set the texture page
+    addPrim(ot[db]+orderLayer, tpage);      // Add primitive to the ordering table
+    nextpri += sizeof(DR_TPAGE);    // Advance the next primitive pointer
 }
 
 void drawPlayer(GameState *gameState) {
+    int playerOrderingTableLevel = 5;
     SPRT *player = (SPRT *) nextpri;      // Cast next primitive
     DR_TPAGE *tpri;
     setSprt(player);              // Initialize the primitive (very important)
     setXY0(player, (int)gameState->x, (int)gameState->y);       // Set primitive (x,y) position
     setWH(player, PLAYER_SIZE, PLAYER_SIZE);        // Set primitive size
+    setUV0(player, 0, 0); // Set texture coordinates
+    setClut(player, 0, 0);
     setRGB0(player, 128, 128, 128);
-    addPrim(ot[db]+5, player);      // Add primitive to the ordering table
+    addPrim(ot[db]+playerOrderingTableLevel, player);      // Add primitive to the ordering table
     nextpri += sizeof(SPRT);    // Advance the next primitive pointer
 
     /* Sort a TPage primitive so the sprites will draw pixels from */
     /* the correct texture page in VRAM */
     tpri = (DR_TPAGE*)nextpri;
-    setDrawTPage( tpri, 0, 0,
-                  getTPage(birdTim.mode & 0x3, 0, birdTim.prect->x, birdTim.prect->y ));
-    addPrim( ot[db]+(OTLEN-1), tpri );
+    setDrawTPage( tpri, 0, 0, getTPageForTim(&birdTextureInfo));
+    addPrim( ot[db]+playerOrderingTableLevel, tpri );
     nextpri += sizeof(DR_TPAGE);
 }
 
 void drawWalls() {
-    TILE *walls[2];
-    drawRectangle(walls[0], 0, 0, 320, 20, 0, 0, 150, 7);
-    drawRectangle(walls[1], 0, 220, 320, 20, 0, 0, 150, 7);
+//    TILE *wall;
+    drawRectangleWithTexture(0, 220, 320, 20, 7, &groundTextureInfo);
+//    drawRectangle(wall, 0, 220, 320, 20, 0, 0, 150, 7);
 }
 
 void drawPipes(GameState *gameState) {
-    TILE *pipe;
     for(int i = 0; i < MAX_PIPES; i++) {
         if(gameState->pipes[i].isActive == false)
             continue;
-        drawRectangle(pipe, gameState->pipes[i].x, 0, 20, gameState->pipes[i].gapTopY, 0, 150, 0, 6);
-        drawRectangle(pipe, gameState->pipes[i].x, gameState->pipes[i].gapBottomY, 20, 240 - gameState->pipes[i].gapBottomY, 0, 150, 0, 6);
+        drawRectangleWithTexture((int)gameState->pipes[i].x, 0, 20, gameState->pipes[i].gapTopY, 6, &pipeTextureInfo);
+        drawRectangleWithTexture((int)gameState->pipes[i].x, gameState->pipes[i].gapBottomY, 20, 240 - gameState->pipes[i].gapBottomY, 6, &pipeTextureInfo);
     }
 }
 
